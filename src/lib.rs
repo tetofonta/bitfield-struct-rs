@@ -53,6 +53,70 @@ pub fn bitfield(args: pc::TokenStream, input: pc::TokenStream) -> pc::TokenStrea
     }
 }
 
+#[cfg(feature = "num_enum")]
+#[proc_macro_derive(IntoBits)]
+pub fn into_bits(input: pc::TokenStream) -> pc::TokenStream {
+    let input = syn::parse2::<syn::ItemEnum>(input.into()).expect("failed to parse enum derive");
+    let name = input.ident;
+    let vis = input.vis;
+    if let Some(repr) = enum_get_repr(&input.attrs) {
+        pc::TokenStream::from(quote! {
+            impl #name {
+                #vis const fn into_bits(self) -> #repr {
+                    self.const_into_primitive()
+                }
+            }
+        })
+    } else {
+        panic!("enum must have a valid representation")
+    }
+}
+
+#[cfg(feature = "num_enum")]
+#[proc_macro_derive(FromBits)]
+pub fn from_bits(input: pc::TokenStream) -> pc::TokenStream {
+    let input = syn::parse2::<syn::ItemEnum>(input.into()).expect("failed to parse enum derive");
+    let name = input.ident;
+    let vis = input.vis;
+    if let Some(repr) = enum_get_repr(&input.attrs) {
+        pc::TokenStream::from(quote! {
+            impl #name {
+                #vis const fn from_bits(value: #repr) -> Self {
+                    Self::const_from_primitive(value)
+                }
+            }
+        })
+    } else {
+        panic!("enum must have a valid representation")
+    }
+}
+
+#[cfg(feature = "num_enum")]
+fn enum_get_repr(attrs: &[syn::Attribute]) -> Option<Ident>{
+    for attr in attrs {
+        if let syn::Meta::List(meta_list) = &attr.meta {
+            if let Some(ident) = meta_list.path.get_ident() {
+                if ident == "repr" {
+                    let mut nested = meta_list.tokens.clone().into_iter();
+                    let repr_tree = match (nested.next(), nested.next()) {
+                        (Some(repr_tree), None) => repr_tree,
+                        _ => panic!("Expected exactly one `repr` argument"),
+                    };
+                    let repr_ident: Ident = syn::parse_quote! {
+                            #repr_tree
+                        };
+                    if repr_ident == "C" {
+                        panic!("repr(C) doesn't have a well defined size");
+                    } else {
+                        return Some(repr_ident);
+                    }
+                }
+            }
+        }
+    }
+    return None
+}
+
 fn bitfield_inner(args: TokenStream, input: TokenStream) -> syn::Result<TokenStream> {
     let input = syn::parse2::<syn::ItemStruct>(input)?;
     let Params {

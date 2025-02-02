@@ -19,7 +19,11 @@ proc-macro = true
 quote = "1.0"
 syn = { version = "2.0", features = ["full", "extra-traits"] }
 proc-macro2 = "1.0"
+num_enum_derive = { git = "https://github.com/tetofonta/num_enum", default-features = false, optional = true, features = ["const"] }
 
 [dev-dependencies]
 defmt = "0.3"
 endian-num = { version = "0.2", features = ["linux-types"] }
+
+[features]
+num_enum = ["num_enum_derive"]

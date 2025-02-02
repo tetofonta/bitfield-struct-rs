@@ -8,6 +8,7 @@ version = "0.10.1"
 dependencies = [
  "defmt",
  "endian-num",
+ "num_enum_derive",
  "proc-macro2",
  "quote",
  "syn",
@@ -56,6 +57,16 @@ name = "endian-num"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b4a54dfedecb1dc004776a597db0c858cf6c31579296734511309291b8399ce"
+
+[[package]]
+name = "num_enum_derive"
+version = "0.7.3"
+source = "git+https://github.com/tetofonta/num_enum#928e3108c2cda66c09384f344187f51e677765a2"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "proc-macro-error-attr2"
